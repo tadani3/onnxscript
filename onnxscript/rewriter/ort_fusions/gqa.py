@@ -354,71 +354,6 @@ class GroupQueryAttention(pattern.RewriteRuleClassBase):
             _outputs=3,
         )
 
-
-class GQACausalMask(pattern.RewriteRuleClassBase):
-    def __init__(self):
-        super().__init__("GQACausalMask", remove_nodes=False)
-
-    def pattern(
-        self,
-        op,
-        mask,
-        input_ids,
-        some_kv_cache,
-        shape_B111,
-        past_seq_length,
-        total_seq_length,
-    ):
-        mask = causal_mask_pattern(op, input_ids, some_kv_cache, shape_B111)
-        position_ids = op.Range(past_seq_length, total_seq_length, 1)
-        position_ids_q = op.Unsqueeze(position_ids, [0])
-        position_ids_k = op.Unsqueeze(position_ids, [0])
-        return op.GQA(
-            mask,
-            position_ids_k,
-            position_ids_q,
-            _allow_other_inputs=True,
-            _domain="ai.onnxruntime._fusion",
-            _outputs=["attn_output", "key_seq", "value_seq"],
-        )
-
-    def rewrite(
-        self,
-        op,
-        total_seq_length,
-        attn_output,
-        **_,
-    ):
-        # Construct total_seq_length_int32 and seqlens_k
-        total_seq_length_int32 = op.Cast(total_seq_length, to=ir.DataType.INT32)
-        one_0D = op.Constant(value_int=1)
-        one_0D_int32 = op.Cast(one_0D, to=ir.DataType.INT32)
-        seqlens_k_0D = op.Sub(total_seq_length_int32, one_0D_int32)
-        zero_1D = op.Constant(value_int=0, dtype=ir.DataType.INT64, shape=[1])
-        seqlens_k = op.Unsqueeze(seqlens_k_0D, zero_1D)
-
-        gqa_node = attn_output.producer()
-        assert len(gqa_node.inputs) == 12, (
-            f"Expected 12 inputs for GQA node, got {len(gqa_node.inputs)}"
-        )
-        query, key, value, past_key, past_value = gqa_node.inputs[3:8]
-        cos, sin = gqa_node.inputs[10:12]
-        updated_inputs = [
-            query,
-            key,
-            value,
-            past_key,
-            past_value,
-            seqlens_k,
-            total_seq_length_int32,
-            cos,
-            sin,
-        ]
-        attributes = gqa_node.attributes
-        return op.GroupQueryAttention(
-            *updated_inputs, **attributes, _domain="com.microsoft", _outputs=3
-        )
-
 class LongRoPeGQACausalMask(pattern.RewriteRuleClassBase):
     def __init__(self):
         super().__init__("LongRoPeGQACausalMask", remove_nodes=False)
@@ -573,9 +508,8 @@ class LongRoPeGQACausalMask(pattern.RewriteRuleClassBase):
         )
 
 _basic_gqa_rule = GroupQueryAttention.rule()
-_gqa_causal_mask_rule = GQACausalMask.rule()
 _longrope_gqa_causal_mask_rule = LongRoPeGQACausalMask.rule()
 
-gqa_rules = pattern.RewriteRuleSet([_basic_gqa_rule, _gqa_causal_mask_rule, _longrope_gqa_causal_mask_rule])
+gqa_rules = pattern.RewriteRuleSet([_basic_gqa_rule, _longrope_gqa_causal_mask_rule])
 
 fuse_gqa = _fusion_utils.apply_fusion_rules(gqa_rules)
