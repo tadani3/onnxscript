@@ -9,13 +9,6 @@ __all__ = [
     "rewrite",
     "RewritePass",
     "MatchResult",
-    "MatchContext",
-    "RewriteRule",
-    "RewriteRuleClassBase",
-    "RewriteRuleSet",
-    "RewriterContext",
-    "MatchingTracer",
-    "MatchStatus",
 ]
 
 import onnx
@@ -32,13 +25,7 @@ from onnxscript.rewriter import (
     pattern,
     redundant_scatter_nd,
 )
-from onnxscript.rewriter._basics import MatchContext, MatchingTracer, MatchResult, MatchStatus
-from onnxscript.rewriter._rewrite_rule import (
-    RewriterContext,
-    RewriteRule,
-    RewriteRuleClassBase,
-    RewriteRuleSet,
-)
+from onnxscript.rewriter._basics import MatchResult
 
 _ModelProtoOrIr = TypeVar("_ModelProtoOrIr", onnx.ModelProto, ir.Model)
 _DEFAULT_REWRITE_RULES: tuple[pattern.RewriteRule, ...] = (

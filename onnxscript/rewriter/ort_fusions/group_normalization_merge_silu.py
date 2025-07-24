@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 
-from onnxscript.rewriter._pattern_ir import torch_module_op
-from onnxscript.rewriter._rewrite_rule import RewriteRule, RewriteRuleSet
+from onnxscript.rewriter import pattern
+
+torch_module_op = pattern.torch_module_op
 
 logger = logging.getLogger(__name__)
 
@@ -55,9 +56,9 @@ def group_normalization_with_silu(
     return op.Transpose(group_norm, perm=[0, 3, 1, 2])
 
 
-group_normalization_merge_silu_submodule_rule = RewriteRule(
+group_normalization_merge_silu_submodule_rule = pattern.RewriteRule(
     group_normalization_and_silu_submodule,
     group_normalization_with_silu,
 )
 
-rules = RewriteRuleSet([group_normalization_merge_silu_submodule_rule])
+rules = pattern.RewriteRuleSet([group_normalization_merge_silu_submodule_rule])

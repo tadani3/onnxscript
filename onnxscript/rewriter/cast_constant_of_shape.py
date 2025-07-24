@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from onnxscript import ir
-from onnxscript.rewriter._rewrite_rule import RewriteRule, RewriteRuleSet
+from onnxscript.rewriter import pattern
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +32,15 @@ def fused_cast_constant_of_shape_without_value(op, shape, dtype, **_):
     return op.ConstantOfShape(shape, value=zero)
 
 
-cast_constant_of_shape_rule = RewriteRule(cast_constant_of_shape, fused_cast_constant_of_shape)
+cast_constant_of_shape_rule = pattern.RewriteRule(
+    cast_constant_of_shape, fused_cast_constant_of_shape
+)
 
-cast_constant_of_shape_without_value_rule = RewriteRule(
+cast_constant_of_shape_without_value_rule = pattern.RewriteRule(
     cast_constant_of_shape_without_value, fused_cast_constant_of_shape_without_value
 )
 
-rules = RewriteRuleSet(
+rules = pattern.RewriteRuleSet(
     [
         cast_constant_of_shape_rule,
         cast_constant_of_shape_without_value_rule,

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from onnxscript import ir
-from onnxscript.rewriter._rewrite_rule import RewriteRule, RewriteRuleSet
+from onnxscript.rewriter import pattern
 
 logger = logging.getLogger(__name__)
 
@@ -161,12 +161,12 @@ def _one_reshape_matmul_reshape_pattern(op, input_a, input_b, shape_a, shape_c):
 
 
 # Register the rewrite rules
-two_reshapes_matmul_reshape_rule = RewriteRule(
+two_reshapes_matmul_reshape_rule = pattern.RewriteRule(
     _two_reshapes_matmul_reshape_pattern,
     _matmul,
     check_if_not_need_reshape,
 )
-one_reshape_matmul_reshape_rule = RewriteRule(
+one_reshape_matmul_reshape_rule = pattern.RewriteRule(
     _one_reshape_matmul_reshape_pattern,
     _matmul,
     # We can use the same check_if_not_need_reshape function for both the rules,
@@ -175,4 +175,6 @@ one_reshape_matmul_reshape_rule = RewriteRule(
 )
 
 # NOTE: The order of the rules is important. Larger pattern should be checked first.
-rules = RewriteRuleSet([two_reshapes_matmul_reshape_rule, one_reshape_matmul_reshape_rule])
+rules = pattern.RewriteRuleSet(
+    [two_reshapes_matmul_reshape_rule, one_reshape_matmul_reshape_rule]
+)

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence
 
 import onnx
 
@@ -16,7 +16,10 @@ from onnxscript.rewriter.ort_fusions import ORT_PATTERN_REWRITE_RULES
 __all__ = [
     "rewrite",
     "ORT_PATTERN_REWRITE_RULES",
+    "ORT_FUNCTION_REWRITE_RULES",
 ]
+
+ORT_FUNCTION_REWRITE_RULES: list[Any] = []
 
 
 def rewrite(
