@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Sequence, Union
 
+import numpy as np
+
 import onnx_ir as ir
 
 from onnxscript.rewriter import _fusion_utils, _ir_utils, pattern
@@ -188,6 +190,7 @@ class PackedQKVForGQAFusion(pattern.RewriteRuleClassBase):
             kv_num_heads=kv_num_heads,
             do_rotary=1,
             rotary_interleaved=interleaved,
+            scale=1.0 / np.sqrt(packed_qkv.shape[2] // (q_num_heads.value + (2 * kv_num_heads.value))),
             _domain="com.microsoft",
             _outputs=3,
         )
